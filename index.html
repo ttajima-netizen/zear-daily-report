@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイムスケジュール／日報｜株式会社ZEAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4EEE0;
+    --panel:#FFFDF9;
+    --ink:#221F1A;
+    --ink-soft:#8A7D6C;
+    --line:#E2D8C3;
+    --navy:#1B3350;
+    --navy-soft:#3C5A80;
+    --seal:#A6362A;
+    --gold:#AD8A2E;
+    --complete:#3D7A55;
+    --complete-bg:#E7F1EA;
+    --progress:#A17A1E;
+    --progress-bg:#F3EAD2;
+    --pending:#8C8272;
+    --pending-bg:#EFE9DA;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(34,31,26,0.05), 0 14px 32px -18px rgba(34,31,26,0.28);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:28px 20px 60px;
+  }
+  @media (max-width:600px){
+    body{ padding:18px 12px 50px; }
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+  }
+
+  /* ---------- Header ---------- */
+  .app-header{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-bottom:28px;
+    padding-bottom:22px;
+    border-bottom:1.5px dashed var(--line);
+    position:relative;
+  }
+  .app-header h1{
+    font-family:"Zen Old Mincho", serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0 0 6px;
+    padding-left:16px;
+    color:var(--navy);
+    letter-spacing:0.05em;
+    line-height:1.35;
+    position:relative;
+  }
+  .app-header h1::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:3px;
+    bottom:3px;
+    width:5px;
+    background:linear-gradient(180deg, var(--gold), var(--seal));
+    border-radius:2px;
+  }
+  .app-header h1 .brand-tag{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .app-header p{
+    margin:0 0 0 16px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+  @media (max-width:600px){
+    .app-header h1{
+      font-size:19px;
+      padding-left:12px;
+      letter-spacing:0.02em;
+    }
+    .app-header h1 .brand-tag{
+      display:block;
+      margin-top:3px;
+      font-size:12px;
+    }
+    .app-header p{
+      margin-left:12px;
+      font-size:11.5px;
+    }
+  }
+
+  /* ---------- Layout ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:1.15fr 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width:920px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .panel{
+    background:var(--panel);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+
+  .panel-head{
+    padding:16px 20px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    row-gap:10px;
+  }
+  @media (max-width:600px){
+    .panel-head{ padding:14px 14px; }
+    .panel-body{ padding:16px 14px 18px !important; }
+  }
+  .panel-head h2{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-size:14.5px;
+    font-weight:700;
+    margin:0;
+    color:var(--navy);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel-head h2::before{
+    content:"";
+    width:4px;height:16px;
+    background:linear-gradient(180deg, var(--gold), var(--seal));
+    border-radius:2px;
+    display:inline-block;
+  }
+  .panel-body{padding:18px 20px 22px;}
+
+  /* ---------- Meta form ---------- */
+  .meta-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  @media (max-width:600px){
+    .meta-row{ grid-template-columns:1fr; }
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    letter-spacing:0.03em;
+  }
+  input[type="text"], input[type="date"], input[type="time"], textarea, select{
+    font-family:inherit;
+    font-size:13.5px;
+    color:var(--ink);
+    background:#FBF8F1;
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:8px 10px;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+    width:100%;
+  }
+  input[type="date"]{
+    max-width:200px;
+  }
+  input:focus, textarea:focus, select:focus{
+    border-color:var(--navy-soft);
+    box-shadow:0 0 0 3px rgba(27,51,80,0.12);
+    background:#fff;
+  }
+
+  /* ---------- Task rows (fixed hourly slots) ---------- */
+  .task-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .task-row{
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:11px 12px;
+    background:#FBF7EE;
+    display:grid;
+    grid-template-columns:96px 1fr 108px;
+    gap:10px;
+    align-items:start;
+    transition:border-color .15s ease;
+  }
+  .task-row:focus-within{ border-color:var(--navy-soft); }
+  @media (max-width:560px){
+    .task-row{grid-template-columns:1fr;}
+  }
+  .team-row-actions{
+    grid-template-columns:1fr auto auto;
+  }
+  @media (max-width:480px){
+    .team-row-actions{
+      grid-template-columns:1fr;
+    }
+    .team-row-actions button{ width:100%; }
+  }
+  .time-label{
+    font-family:"Zen Kaku Gothic New", sans-serif;
+    font-weight:700;
+    font-size:12.5px;
+    color:var(--navy);
+    background:#EAF0F5;
+    border:1px solid #DCE6ED;
+    border-radius:6px;
+    padding:8px 6px;
+    text-align:center;
+    line-height:1.3;
+    white-space:nowrap;
+  }
+  .task-row .col-main{display:flex;flex-direction:column;gap:6px;}
+  .task-row .col-main textarea{min-height:34px;resize:vertical;}
+
+  .status-select{
+    padding:7px 8px;
+    font-weight:600;
+    font-size:12.5px;
+  }
+
+  .field.notes{margin-top:16px;}
+  .field.notes textarea{min-height:70px;resize:vertical;}
+
+  .btn-generate{
+    margin-top:18px;
+    width:100%;
+    background:linear-gradient(180deg, var(--navy-soft), var(--navy));
+    color:#fff;
+    font-weight:700;
+    font-size:14.5px;
+    padding:13px;
+    border-radius:9px;
+    letter-spacing:0.08em;
+    box-shadow:0 4px 14px -4px rgba(27,51,80,0.55);
+    transition:transform .12s ease, box-shadow .12s ease;
+    border:none;
+    cursor:pointer;
+  }
+  .btn-generate:hover{transform:translateY(-1px);box-shadow:0 6px 18px -4px rgba(27,51,80,0.6);}
+  .btn-generate:active{transform:translateY(0);}
+
+  /* ---------- Preview / report ---------- */
+  .report-paper{
+    background:
+      linear-gradient(to right, transparent 0 40px, rgba(166,54,42,0.32) 40px 41px, transparent 41px 100%),
+      repeating-linear-gradient(#FFFEFB, #FFFEFB 27px, #F1EAD8 28px);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:20px 22px 20px 54px;
+    font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif;
+    font-size:13px;
+    line-height:28px;
+    color:var(--ink);
+    min-height:320px;
+    white-space:pre-wrap;
+    word-break:break-word;
+    box-shadow:inset 0 1px 3px rgba(34,31,26,0.04);
+  }
+  @media (max-width:480px){
+    .report-paper{ padding-left:24px; }
+    .report-paper{
+      background:
+        linear-gradient(to right, transparent 0 12px, rgba(166,54,42,0.32) 12px 13px, transparent 13px 100%),
+        repeating-linear-gradient(#FFFEFB, #FFFEFB 27px, #F1EAD8 28px);
+    }
+  }
+  .report-empty{
+    color:var(--ink-soft);
+    font-family:"Noto Sans JP",sans-serif;
+    line-height:1.7;
+    font-size:13px;
+  }
+
+  .stat-strip{
+    display:flex;
+    gap:10px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .stat-chip{
+    flex:1;
+    min-width:110px;
+    background:#FBF7EE;
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:10px 12px;
+    text-align:center;
+  }
+  .stat-chip .num{
+    font-family:"Zen Old Mincho",serif;
+    font-size:21px;
+    font-weight:700;
+    color:var(--navy);
+    display:block;
+  }
+  .stat-chip .lbl{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+    letter-spacing:0.03em;
+  }
+
+  .preview-actions{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+  }
+  .btn-copy, .btn-download{
+    flex:1;
+    padding:10px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--navy);
+    transition:all .15s ease;
+    cursor:pointer;
+  }
+  .btn-copy:hover, .btn-download:hover{background:#EEF2F5;border-color:var(--navy-soft);}
+  .btn-copy.copied{background:var(--complete-bg);border-color:var(--complete);color:var(--complete);}
+
+  .status-badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .badge-complete{background:var(--complete-bg);color:var(--complete);}
+  .badge-progress{background:var(--progress-bg);color:var(--progress);}
+  .badge-pending{background:var(--pending-bg);color:var(--pending);}
+
+  .footnote{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:22px;
+  }
+</style>
+<!-- チーム共有機能用（Firebase Firestore）。無料のFirebaseプロジェクトを作成し、下のスクリプト内のfirebaseConfigに情報を入力してください。 -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="app-header">
+    <div>
+      <h1>タイムスケジュール／日報 <span class="brand-tag">｜株式会社ZEAR</span></h1>
+      <p>10:00〜18:30の1時間単位のスケジュールを入力すると、提出用の日報テキストを自動でまとめます。</p>
+    </div>
+  </div>
+
+  <!-- LIVE TEAM SCHEDULE (auto-syncs as people type, no submit needed) -->
+  <div class="panel" style="margin-bottom:22px;">
+    <div class="panel-head">
+      <h2>タイムスケジュール<span id="liveClock" style="font-weight:600;color:var(--ink-soft);font-size:12.5px;margin-left:4px;"></span></h2>
+      <span style="font-size:11px;color:var(--ink-soft);">入力すると自動で反映されます</span>
+    </div>
+    <div class="panel-body">
+      <div id="liveScheduleList" class="task-list">
+        <div class="report-empty">読み込み中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM LOG (shared across everyone using this tool) -->
+  <div class="panel" style="margin-bottom:22px;">
+    <div class="panel-head">
+      <h2>日報（提出済み・選択した日付分）</h2>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="date" id="teamReportDate" style="width:auto;min-height:38px;padding:6px 8px;font-size:12.5px;">
+        <button id="refreshTeamBtn" style="flex:none;min-height:38px;padding:7px 14px;font-size:12px;font-weight:600;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--navy);cursor:pointer;">🔄 更新</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div id="teamList" class="task-list">
+        <div class="report-empty">読み込み中…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- LEFT: INPUT -->
+    <div class="panel">
+      <div class="panel-head"><h2>本日のタイムスケジュール</h2></div>
+      <div class="panel-body">
+
+        <div class="meta-row">
+          <div class="field">
+            <label for="reportDate">日付</label>
+            <input type="date" id="reportDate">
+          </div>
+          <div class="field">
+            <label for="userName" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>氏名（Chatworkメンバー）</span>
+              <button type="button" id="refreshNameBtn" style="border:none;background:none;color:var(--navy-soft);font-size:11px;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;">🔄 更新</button>
+            </label>
+            <select id="userName">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="taskList" class="task-list"></div>
+
+        <div class="field notes" id="notesTasksField" style="display:none;">
+          <label for="notesTasks">■本日のタスク</label>
+          <textarea id="notesTasks" placeholder="タイムスケジュールを使わない場合は、こちらに本日の業務内容を記入してください"></textarea>
+        </div>
+
+        <div class="field notes">
+          <label for="notesReport">■報告事項</label>
+          <textarea id="notesReport" placeholder="共有事項や連絡事項があれば記入してください"></textarea>
+        </div>
+
+        <div class="field notes">
+          <label for="notesImprovement">■本日のタスクの気づき＆改善できる点</label>
+          <textarea id="notesImprovement" placeholder="気づいた点や次回に活かせる改善案を記入してください"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PREVIEW -->
+    <div class="panel">
+      <div class="panel-head"><h2>日報プレビュー</h2></div>
+      <div class="panel-body">
+
+        <div class="stat-strip" id="statStrip" style="display:none;">
+          <div class="stat-chip"><span class="num" id="statTotal">0</span><span class="lbl">タスク件数</span></div>
+          <div class="stat-chip"><span class="num" id="statDone">0</span><span class="lbl">完了</span></div>
+          <div class="stat-chip"><span class="num" id="statHours">0h</span><span class="lbl">稼働時間</span></div>
+        </div>
+
+        <div id="reportOutput" class="report-paper">
+          <div class="report-empty">左側にスケジュールを入力すると、ここに整形済みの日報が自動で表示されます。</div>
+        </div>
+
+        <div id="commentSection" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;">
+          <h3 style="font-size:13px;font-weight:700;color:var(--navy);margin:0 0 10px;">コメント</h3>
+          <div id="commentList" style="margin-bottom:10px;"></div>
+          <div style="margin-bottom:8px;">
+            <label for="commentAuthorSelect" style="font-size:11px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:4px;">コメントする人（Chatworkメンバー）</label>
+            <select id="commentAuthorSelect">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="commentInput" placeholder="コメントを入力" style="flex:1;">
+            <button id="addCommentBtn" style="flex:none;padding:0 16px;font-size:13px;font-weight:600;border-radius:7px;border:none;background:var(--navy);color:#fff;cursor:pointer;">送信</button>
+          </div>
+        </div>
+
+        <div class="preview-actions">
+          <button class="btn-copy" id="copyBtn">📋 コピー</button>
+          <button class="btn-download" id="downloadBtn">⬇ テキストで保存</button>
+        </div>
+        <div class="field notes" style="margin-top:14px;">
+          <label style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Toで通知するメンバー（Chatwork）</span>
+            <button type="button" id="refreshMentionCheckboxesBtn" style="border:none;background:none;color:var(--navy-soft);font-size:11px;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;">🔄 更新</button>
+          </label>
+          <div id="mentionCheckboxList" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px;border:1px solid var(--line);border-radius:7px;background:#FBF8F1;max-height:140px;overflow-y:auto;">
+            <div class="report-empty">読み込み中…</div>
+          </div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">デフォルトは全員チェック済みです。チェックを外した人には通知されません。</div>
+        </div>
+
+        <button class="btn-generate" id="submitTeamBtn" style="margin-top:10px;background:linear-gradient(180deg, #C4A34A, var(--gold));box-shadow:0 4px 14px -4px rgba(173,138,46,0.5);">👥 提出する</button>
+        <div id="submitStatus" style="font-size:12px;color:var(--ink-soft);margin-top:8px;min-height:16px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footnote">個人の入力内容はこの画面上でのみ保持されます。「提出する」を押した内容のみ、共有データベース経由で他のメンバーに公開されます（利用にはFirebase設定が必要です）。</div>
+</div>
+
+<script>
+function pad(n){ return n.toString().padStart(2,'0'); }
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+// Fixed hourly slots: 10:00 - 18:30 (last slot is 30 minutes)
+const SLOTS = [
+  {start:'10:00', end:'11:00'},
+  {start:'11:00', end:'12:00'},
+  {start:'12:00', end:'13:00'},
+  {start:'13:00', end:'14:00'},
+  {start:'14:00', end:'15:00'},
+  {start:'15:00', end:'16:00'},
+  {start:'16:00', end:'17:00'},
+  {start:'17:00', end:'18:00'},
+  {start:'18:00', end:'18:30'}
+];
+
+function buildRows(){
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+  SLOTS.forEach((slot, i) => {
+    const div = document.createElement('div');
+    div.className = 'task-row';
+    div.dataset.start = slot.start;
+    div.dataset.end = slot.end;
+    div.innerHTML = `
+      <div class="time-label">${slot.start}<br>〜${slot.end}</div>
+      <div class="col-main">
+        <textarea class="t-task" placeholder="業務内容を入力"></textarea>
+        <textarea class="t-memo" placeholder="行った業務" style="min-height:26px;"></textarea>
+      </div>
+      <select class="status-select t-status">
+        <option value="未完了" selected>未完了</option>
+        <option value="完了">完了</option>
+      </select>
+    `;
+    list.appendChild(div);
+
+    div.querySelector('.t-task').addEventListener('input', onScheduleFieldChange);
+    div.querySelector('.t-memo').addEventListener('input', onScheduleFieldChange);
+    div.querySelector('.t-status').addEventListener('change', onScheduleFieldChange);
+  });
+}
+
+function timeToMinutes(t){
+  if(!t) return null;
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+
+function formatDateJP(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['日','月','火','水','木','金','土'];
+  return `${d.getFullYear()}年${pad(d.getMonth()+1)}月${pad(d.getDate())}日（${days[d.getDay()]}）`;
+}
+
+function statusBadgeClass(status){
+  if(status === '完了') return 'badge-complete';
+  return 'badge-pending';
+}
+
+function escapeHTML(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function onScheduleFieldChange(){
+  generateReport();
+  scheduleAutoSave();
+}
+
+function generateReport(){
+  hideCommentSection();
+  const dateVal = document.getElementById('reportDate').value || todayStr();
+  const name = document.getElementById('userName').value.trim();
+  const notesReport = document.getElementById('notesReport').value.trim();
+  const notesImprovement = document.getElementById('notesImprovement').value.trim();
+  const rows = Array.from(document.querySelectorAll('#taskList .task-row'));
+
+  const tasks = rows.map(row => ({
+    start: row.dataset.start,
+    end: row.dataset.end,
+    task: row.querySelector('.t-task').value.trim(),
+    status: row.querySelector('.t-status').value,
+    memo: row.querySelector('.t-memo').value.trim()
+  })).filter(t => t.task !== '');
+
+  // タイムスケジュールが未記入の場合は「■本日のタスク」欄を表示し、
+  // 記入され始めたら自動で隠す
+  const notesTasksField = document.getElementById('notesTasksField');
+  const notesTasks = document.getElementById('notesTasks').value.trim();
+  notesTasksField.style.display = (tasks.length === 0) ? 'block' : 'none';
+
+  if(tasks.length === 0 && notesTasks === ''){
+    document.getElementById('reportOutput').innerHTML =
+      '<div class="report-empty">タイムスケジュールを入力するか、「■本日のタスク」欄に業務内容を記入してください。</div>';
+    document.getElementById('statStrip').style.display = 'none';
+    document.getElementById('reportOutput').dataset.plain = '';
+    return;
+  }
+
+  // タイムスケジュール未記入・フリーテキストのみの場合の簡易日報
+  if(tasks.length === 0 && notesTasks !== ''){
+    const lines = [];
+    lines.push(`【日報】${formatDateJP(dateVal)}`);
+    if(name) lines.push(`氏名：${name}`);
+    lines.push('');
+    lines.push('■本日のタスク');
+    lines.push(notesTasks);
+    lines.push('');
+    lines.push('■報告事項');
+    lines.push(notesReport || '（特になし）');
+    lines.push('');
+    lines.push('■本日のタスクの気づき＆改善できる点');
+    lines.push(notesImprovement || '（特になし）');
+
+    const freeReportText = lines.join('\n');
+
+    document.getElementById('reportOutput').innerHTML =
+      `【日報】${escapeHTML(formatDateJP(dateVal))}\n` +
+      (name ? `氏名：${escapeHTML(name)}\n` : '') +
+      `\n■本日のタスク\n${escapeHTML(notesTasks)}\n\n` +
+      `■報告事項\n${escapeHTML(notesReport || '（特になし）')}\n\n` +
+      `■本日のタスクの気づき＆改善できる点\n${escapeHTML(notesImprovement || '（特になし）')}`;
+
+    document.getElementById('reportOutput').dataset.plain = freeReportText;
+    document.getElementById('statStrip').style.display = 'none';
+    return;
+  }
+
+  let totalMinutes = 0;
+  const counts = {完了:0, 未完了:0};
+
+  const lines = [];
+  lines.push(`【日報】${formatDateJP(dateVal)}`);
+  if(name) lines.push(`氏名：${name}`);
+  lines.push('');
+  lines.push('■ 本日の業務内容');
+
+  tasks.forEach(t => {
+    counts[t.status] = (counts[t.status]||0) + 1;
+    lines.push(`${t.start}〜${t.end}　${t.task}　【${t.status}】`);
+    if(t.memo) lines.push(`　└ 行った業務：${t.memo}`);
+
+    const s = timeToMinutes(t.start), e = timeToMinutes(t.end);
+    if(e > s) totalMinutes += (e - s);
+  });
+
+  const hours = Math.floor(totalMinutes/60);
+  const mins = totalMinutes % 60;
+  const hoursLabel = `${hours}時間${mins}分`;
+
+  lines.push('');
+  lines.push('■ 本日のまとめ');
+  lines.push(`・タスク件数：${tasks.length}件（完了${counts['完了']}／未完了${counts['未完了']}）`);
+  lines.push(`・稼働時間合計：${hoursLabel}`);
+
+  lines.push('');
+  lines.push('■報告事項');
+  lines.push(notesReport || '（特になし）');
+
+  lines.push('');
+  lines.push('■本日のタスクの気づき＆改善できる点');
+  lines.push(notesImprovement || '（特になし）');
+
+  const reportText = lines.join('\n');
+
+  const previewHTML = tasks.map(t => {
+    const badge = `<span class="status-badge ${statusBadgeClass(t.status)}">${t.status}</span>`;
+    let block = `${t.start}〜${t.end}　${escapeHTML(t.task)}　${badge}\n`;
+    if(t.memo) block += `　└ 行った業務：${escapeHTML(t.memo)}\n`;
+    return block;
+  }).join('');
+
+  document.getElementById('reportOutput').innerHTML =
+    `【日報】${escapeHTML(formatDateJP(dateVal))}\n` +
+    (name ? `氏名：${escapeHTML(name)}\n` : '') +
+    `\n■ 本日の業務内容\n` +
+    previewHTML +
+    `\n■ 本日のまとめ\n` +
+    `・タスク件数：${tasks.length}件（完了${counts['完了']}／未完了${counts['未完了']}）\n` +
+    `・稼働時間合計：${hoursLabel}\n\n` +
+    `■報告事項\n` +
+    `${escapeHTML(notesReport || '（特になし）')}\n\n` +
+    `■本日のタスクの気づき＆改善できる点\n` +
+    `${escapeHTML(notesImprovement || '（特になし）')}`;
+
+  document.getElementById('reportOutput').dataset.plain = reportText;
+
+  document.getElementById('statTotal').textContent = tasks.length;
+  document.getElementById('statDone').textContent = counts['完了'];
+  document.getElementById('statHours').textContent = `${hours}h${mins}m`;
+  document.getElementById('statStrip').style.display = 'flex';
+}
+
+// Init
+document.getElementById('reportDate').value = todayStr();
+document.getElementById('teamReportDate').value = todayStr();
+buildRows();
+
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  let plain = document.getElementById('reportOutput').dataset.plain;
+  if(!plain){ generateReport(); plain = document.getElementById('reportOutput').dataset.plain; }
+  if(!plain) return;
+  navigator.clipboard.writeText(plain).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 コピー'; btn.classList.remove('copied'); }, 1800);
+  });
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  let plain = document.getElementById('reportOutput').dataset.plain;
+  if(!plain){ generateReport(); plain = document.getElementById('reportOutput').dataset.plain; }
+  if(!plain) return;
+  const dateVal = document.getElementById('reportDate').value || todayStr();
+  const blob = new Blob([plain], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `日報_${dateVal}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ---------------- チーム共有機能 (Firebase Firestore) ----------------
+   Netlify等の外部ホスティングでも複数人でデータを共有するには、
+   ブラウザ側だけで完結する無料のデータベース（Firebase Firestore）を使います。
+
+   【設定手順】
+   1. https://console.firebase.google.com/ で無料プロジェクトを作成
+   2. 左メニュー「Firestore Database」→「データベースの作成」（テストモードでOK）
+   3. 左メニューの「プロジェクトの設定」→「マイアプリ」→ウェブアプリを追加し、
+      表示された firebaseConfig の値を下にそのまま貼り付け
+   4. Firestoreの「ルール」タブを以下のように設定して公開：
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /reports/{doc} {
+              allow read, write: if true;
+            }
+          }
+        }
+      ※ 誰でも読み書きできる設定です。社内利用など限定共有を前提にしてください。
+--------------------------------------------------------------------- */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBmcEYyV5HkYGvkRcH8XOVtGMEpiBJB93k",
+  authDomain: "daily-report-dbbf9.firebaseapp.com",
+  projectId: "daily-report-dbbf9",
+  storageBucket: "daily-report-dbbf9.firebasestorage.app",
+  messagingSenderId: "112676696692",
+  appId: "1:112676696692:web:0639d2e27b842a76f59721"
+};
+
+let db = null;
+let firebaseReady = false;
+
+try{
+  if(firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY" && typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseReady = true;
+  }
+}catch(e){
+  console.error('Firebase初期化エラー', e);
+  firebaseReady = false;
+}
+
+function teamDocId(dateVal, name){
+  const safeName = (name && name.trim() ? name.trim() : '未入力').replace(/[\/\.\#\$\[\]\s]+/g, '_');
+  return `${dateVal}_${safeName}`;
+}
+
+function collectAllSlots(){
+  return Array.from(document.querySelectorAll('#taskList .task-row')).map(row => ({
+    start: row.dataset.start,
+    end: row.dataset.end,
+    task: row.querySelector('.t-task').value,
+    status: row.querySelector('.t-status').value,
+    memo: row.querySelector('.t-memo').value
+  }));
+}
+
+/* ---------------- タイムスケジュールのリアルタイム共有 (schedules コレクション) ----------------
+   「提出する」を押さなくても、入力すると自動的に保存され、
+   同じツールを開いている他のメンバーの画面にもリアルタイムで反映されます。
+   Firestoreのルールに schedules コレクションも追加してください：
+
+     match /schedules/{doc} {
+       allow read, write: if true;
+     }
+--------------------------------------------------------------------- */
+
+function updateLiveClock(){
+  const el = document.getElementById('liveClock');
+  if(!el) return;
+  const d = new Date();
+  el.textContent = `（${d.getHours()}時${pad(d.getMinutes())}分時点）`;
+}
+
+updateLiveClock();
+setInterval(updateLiveClock, 1000 * 30);
+
+let autoSaveTimer = null;
+let liveUnsubscribe = null;
+
+function scheduleAutoSave(){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(saveScheduleLive, 700);
+}
+
+async function saveScheduleLive(){
+  if(!firebaseReady) return;
+
+  const dateVal = document.getElementById('reportDate').value || todayStr();
+  const name = document.getElementById('userName').value.trim() || '未入力';
+  const docId = teamDocId(dateVal, name);
+
+  try{
+    await db.collection('schedules').doc(docId).set({
+      name,
+      date: dateVal,
+      updatedAt: new Date().toISOString(),
+      slots: collectAllSlots()
+    });
+  }catch(e){
+    console.error('saveScheduleLive error', e);
+  }
+}
+
+function renderSlotsSummary(slots){
+  const filled = (slots || []).filter(s => s.task && s.task.trim() !== '');
+  if(filled.length === 0){
+    return '<span style="color:var(--ink-soft);font-size:12px;">（まだ入力なし）</span>';
+  }
+  return filled.map(s => {
+    const badge = `<span class="status-badge ${statusBadgeClass(s.status)}" style="font-size:10px;padding:1px 6px;">${escapeHTML(s.status)}</span>`;
+    return `<div style="font-size:12px;line-height:1.9;">${s.start}〜${s.end}　${escapeHTML(s.task)} ${badge}</div>`;
+  }).join('');
+}
+
+let expandedLiveNames = new Set();
+
+function renderLiveSchedule(entries){
+  const container = document.getElementById('liveScheduleList');
+
+  if(!firebaseReady){
+    container.innerHTML = '<div class="report-empty">チーム共有機能が未設定です（firebaseConfigの入力が必要です）。</div>';
+    return;
+  }
+
+  const filledEntries = (entries || []).filter(entry =>
+    (entry.slots || []).some(s => s.task && s.task.trim() !== '')
+  );
+
+  if(filledEntries.length === 0){
+    container.innerHTML = '<div class="report-empty">この日付のメンバーはまだ誰も入力していません。</div>';
+    return;
+  }
+
+  const myName = document.getElementById('userName').value.trim();
+  const sorted = [...filledEntries].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ja'));
+
+  container.innerHTML = '';
+  sorted.forEach(entry => {
+    const entryName = entry.name || '未入力';
+    const isExpanded = expandedLiveNames.has(entryName);
+
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    row.style.gridTemplateColumns = '1fr';
+    const selfTag = (myName && myName === (entry.name || '').trim()) ? '　<span style="font-size:10.5px;color:var(--gold);font-weight:700;">（自分）</span>' : '';
+
+    row.innerHTML = `
+      <div class="col-main">
+        <button class="live-name-btn" type="button" style="display:flex;align-items:baseline;justify-content:space-between;width:100%;background:none;border:none;padding:0;cursor:pointer;text-align:left;font-family:inherit;">
+          <span style="font-size:13.5px;font-weight:700;color:var(--ink);">
+            <span style="display:inline-block;width:12px;color:var(--ink-soft);">${isExpanded ? '▼' : '▶'}</span>
+            ${escapeHTML(entryName)}${selfTag}
+          </span>
+          <span style="font-size:11px;color:var(--ink-soft);">${formatUpdatedAt(entry.updatedAt)}</span>
+        </button>
+        <div class="live-details" style="margin-top:6px;padding-left:16px;display:${isExpanded ? 'block' : 'none'};">
+          ${renderSlotsSummary(entry.slots)}
+        </div>
+      </div>
+    `;
+
+    row.querySelector('.live-name-btn').addEventListener('click', () => {
+      if(expandedLiveNames.has(entryName)){
+        expandedLiveNames.delete(entryName);
+      } else {
+        expandedLiveNames.add(entryName);
+      }
+      renderLiveSchedule(currentLiveEntries);
+    });
+
+    container.appendChild(row);
+  });
+}
+
+let currentLiveEntries = [];
+
+function subscribeLiveSchedule(){
+  if(!firebaseReady) return;
+  if(liveUnsubscribe){ liveUnsubscribe(); liveUnsubscribe = null; }
+
+  const dateVal = document.getElementById('reportDate').value || todayStr();
+  const container = document.getElementById('liveScheduleList');
+  container.innerHTML = '<div class="report-empty">読み込み中…</div>';
+
+  liveUnsubscribe = db.collection('schedules').where('date', '==', dateVal)
+    .onSnapshot(
+      snapshot => {
+        currentLiveEntries = [];
+        snapshot.forEach(doc => currentLiveEntries.push(doc.data()));
+        renderLiveSchedule(currentLiveEntries);
+      },
+      err => {
+        console.error('subscribeLiveSchedule error', err);
+        container.innerHTML = '<div class="report-empty">リアルタイム更新の取得に失敗しました。</div>';
+      }
+    );
+}
+
+/* ---------------- 提出済み日報へのコメント機能 ---------------- */
+
+let viewingDocId = null;
+let viewingReportName = '';
+let viewingUnsubscribe = null;
+let currentDocComments = [];
+let editingCommentId = null;
+
+function hideCommentSection(){
+  if(viewingUnsubscribe){ viewingUnsubscribe(); viewingUnsubscribe = null; }
+  viewingDocId = null;
+  viewingReportName = '';
+  currentDocComments = [];
+  editingCommentId = null;
+  const section = document.getElementById('commentSection');
+  if(section) section.style.display = 'none';
+}
+
+function showCommentSection(docId, reportName){
+  if(!firebaseReady) return;
+  if(viewingUnsubscribe){ viewingUnsubscribe(); viewingUnsubscribe = null; }
+
+  viewingDocId = docId;
+  viewingReportName = reportName || '';
+  editingCommentId = null;
+  document.getElementById('commentSection').style.display = 'block';
+  document.getElementById('commentList').innerHTML = '<div class="report-empty">読み込み中…</div>';
+  populateCommentAuthorSelect();
+
+  viewingUnsubscribe = db.collection('reports').doc(docId).onSnapshot(
+    doc => {
+      const data = doc.data();
+      currentDocComments = (data && data.comments) ? data.comments : [];
+      renderComments(currentDocComments);
+    },
+    err => {
+      console.error('showCommentSection error', err);
+      document.getElementById('commentList').innerHTML = '<div class="report-empty">コメントの読み込みに失敗しました。</div>';
+    }
+  );
+}
+
+function makeCommentId(){
+  return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+function renderComments(comments){
+  const list = document.getElementById('commentList');
+  if(!comments || comments.length === 0){
+    list.innerHTML = '<div class="report-empty">まだコメントはありません。</div>';
+    return;
+  }
+
+  const myName = document.getElementById('commentAuthorSelect').value.trim();
+  const sorted = [...comments].sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  list.innerHTML = '';
+  sorted.forEach(c => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:8px 10px;background:#FBFAF7;border:1px solid var(--line);border-radius:7px;margin-bottom:6px;';
+
+    const isOwn = !!c.id && myName !== '' && myName === (c.author || '').trim();
+    const editedTag = c.updatedAt ? '<span style="color:var(--ink-soft);"> (編集済み)</span>' : '';
+
+    if(c.id && editingCommentId === c.id){
+      wrap.innerHTML = `
+        <div style="font-size:11px;color:var(--ink-soft);margin-bottom:5px;">
+          <strong style="color:var(--navy);">${escapeHTML(c.author || '匿名')}</strong>
+        </div>
+        <textarea class="comment-edit-input" style="min-height:50px;">${escapeHTML(c.text)}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button class="comment-save-btn" style="padding:5px 12px;font-size:12px;font-weight:600;border-radius:6px;border:none;background:var(--navy);color:#fff;cursor:pointer;">保存</button>
+          <button class="comment-cancel-btn" style="padding:5px 12px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;">キャンセル</button>
+        </div>
+      `;
+      wrap.querySelector('.comment-save-btn').addEventListener('click', () => {
+        const newText = wrap.querySelector('.comment-edit-input').value.trim();
+        if(newText) updateComment(c.id, newText);
+      });
+      wrap.querySelector('.comment-cancel-btn').addEventListener('click', () => {
+        editingCommentId = null;
+        renderComments(currentDocComments);
+      });
+    } else {
+      wrap.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--ink-soft);margin-bottom:3px;">
+          <strong style="color:var(--navy);">${escapeHTML(c.author || '匿名')}</strong>
+          <span>${formatUpdatedAt(c.createdAt)}${editedTag}</span>
+        </div>
+        <div style="font-size:13px;white-space:pre-wrap;">${escapeHTML(c.text)}</div>
+      `;
+      if(isOwn){
+        const editLink = document.createElement('button');
+        editLink.textContent = '編集';
+        editLink.style.cssText = 'margin-top:4px;padding:0;border:none;background:none;color:var(--navy-soft);font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:underline;';
+        editLink.addEventListener('click', () => {
+          editingCommentId = c.id;
+          renderComments(currentDocComments);
+        });
+        wrap.appendChild(editLink);
+      }
+    }
+
+    list.appendChild(wrap);
+  });
+}
+
+async function addComment(){
+  if(!viewingDocId){ return; }
+  const input = document.getElementById('commentInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  const author = document.getElementById('commentAuthorSelect').value.trim() || '未入力';
+  const comment = { id: makeCommentId(), author, text, createdAt: new Date().toISOString() };
+
+  try{
+    await db.collection('reports').doc(viewingDocId).update({
+      comments: firebase.firestore.FieldValue.arrayUnion(comment)
+    });
+    input.value = '';
+    notifyCommentChatwork(viewingReportName, author, text);
+  }catch(e){
+    console.error('addComment error', e);
+  }
+}
+
+async function updateComment(commentId, newText){
+  if(!viewingDocId) return;
+  const updatedArray = currentDocComments.map(c =>
+    c.id === commentId ? { ...c, text: newText, updatedAt: new Date().toISOString() } : c
+  );
+  try{
+    await db.collection('reports').doc(viewingDocId).update({ comments: updatedArray });
+    editingCommentId = null;
+  }catch(e){
+    console.error('updateComment error', e);
+  }
+}
+
+
+async function submitToTeam(){
+  const statusEl = document.getElementById('submitStatus');
+
+  if(!firebaseReady){
+    statusEl.textContent = 'チーム共有機能が未設定です（firebaseConfigの入力が必要です）。';
+    statusEl.style.color = 'var(--seal)';
+    return;
+  }
+
+  let plain = document.getElementById('reportOutput').dataset.plain;
+  if(!plain){ generateReport(); plain = document.getElementById('reportOutput').dataset.plain; }
+  if(!plain){
+    statusEl.textContent = '業務内容を入力してから提出してください。';
+    statusEl.style.color = 'var(--seal)';
+    return;
+  }
+
+  const dateVal = document.getElementById('reportDate').value || todayStr();
+  const name = document.getElementById('userName').value.trim() || '未入力';
+  const notesReport = document.getElementById('notesReport').value;
+  const notesImprovement = document.getElementById('notesImprovement').value;
+  const notesTasks = document.getElementById('notesTasks').value;
+  const docId = teamDocId(dateVal, name);
+
+  statusEl.textContent = '提出中…';
+  statusEl.style.color = 'var(--ink-soft)';
+
+  try{
+    await db.collection('reports').doc(docId).set({
+      name,
+      date: dateVal,
+      updatedAt: new Date().toISOString(),
+      text: plain,
+      notesReport,
+      notesImprovement,
+      notesTasks,
+      slots: collectAllSlots()
+    }, { merge: true });
+    statusEl.textContent = `✓ ${name} さんの日報をチームに共有しました。`;
+    statusEl.style.color = 'var(--complete)';
+    loadTeamReports();
+    notifyChatwork(name, dateVal, getAllMemberMentions());
+  } catch(e){
+    console.error('submitToTeam error', e);
+    statusEl.textContent = '提出中にエラーが発生しました。もう一度お試しください。';
+    statusEl.style.color = 'var(--seal)';
+  }
+}
+
+/* ---------------- Chatworkとの連携（メンバー選択・通知） ----------------
+   Netlify Function（netlify/functions/chatwork.js）を1つ経由してChatworkと連携します。
+   ブラウザから直接Chatwork APIを呼ぶとCORSでブロックされるための回避策です。
+
+   【事前設定】
+   1. Netlifyの環境変数に CHATWORK_API_TOKEN（ChatworkのAPIトークン）を設定してください。
+   2. 下の CHATWORK_ROOM_ID に、通知したいChatworkルームのIDを入力してください
+      （ルームを開いたときのURLの数字部分。トークンと違い秘匿情報ではないため、
+      このファイルに直接書いて問題ありません）。
+--------------------------------------------------------------------- */
+
+const CHATWORK_ROOM_ID = '446152412';
+
+let chatworkMembers = [];
+let chatworkNameToId = {};
+let uncheckedMentionIds = new Set();
+
+async function callChatworkFunction(payload){
+  const res = await fetch('/.netlify/functions/chatwork', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId: CHATWORK_ROOM_ID, ...payload })
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok){ throw new Error((data && data.error) ? JSON.stringify(data.error) : 'request failed'); }
+  return data;
+}
+
+function getAllMemberMentions(){
+  const container = document.getElementById('mentionCheckboxList');
+  return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+    .map(cb => ({ accountId: cb.value, name: cb.dataset.name }));
+}
+
+function populateMentionCheckboxes(){
+  const container = document.getElementById('mentionCheckboxList');
+
+  if(chatworkMembers.length === 0){
+    container.innerHTML = '<div class="report-empty">メンバーが見つかりません</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  chatworkMembers.forEach(m => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink);cursor:pointer;white-space:nowrap;';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = m.accountId;
+    cb.dataset.name = m.name;
+    cb.checked = !uncheckedMentionIds.has(m.accountId);
+    cb.addEventListener('change', () => {
+      if(cb.checked){ uncheckedMentionIds.delete(m.accountId); }
+      else { uncheckedMentionIds.add(m.accountId); }
+    });
+
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(m.name));
+    container.appendChild(label);
+  });
+}
+
+function populateNameSelect(selectEl, selectedValue){
+  const current = selectedValue !== undefined ? selectedValue : selectEl.value;
+  selectEl.innerHTML = '<option value="">選択してください</option>';
+  chatworkMembers.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.name;
+    opt.textContent = m.name;
+    opt.dataset.accountId = m.accountId;
+    selectEl.appendChild(opt);
+  });
+  // 現在Chatworkメンバー一覧に存在しない名前でも、選択中であれば一時的に残す
+  if(current && !chatworkMembers.some(m => m.name === current)){
+    const opt = document.createElement('option');
+    opt.value = current;
+    opt.textContent = `${current}（Chatwork外）`;
+    selectEl.appendChild(opt);
+  }
+  if(current) selectEl.value = current;
+}
+
+function populateCommentAuthorSelect(){
+  const select = document.getElementById('commentAuthorSelect');
+  if(!select) return;
+  // デフォルトは現在選択中の氏名を引き継ぐ
+  populateNameSelect(select, document.getElementById('userName').value.trim());
+}
+
+async function loadChatworkMembers(){
+  const userNameSelect = document.getElementById('userName');
+  userNameSelect.innerHTML = '<option value="" disabled>読み込み中…</option>';
+
+  try{
+    const data = await callChatworkFunction({ action: 'members' });
+    chatworkMembers = (data.members || []).sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ja'));
+    chatworkNameToId = {};
+    chatworkMembers.forEach(m => { chatworkNameToId[m.name] = m.accountId; });
+
+    if(chatworkMembers.length === 0){
+      userNameSelect.innerHTML = '<option value="" disabled>メンバーが見つかりません</option>';
+      document.getElementById('mentionCheckboxList').innerHTML = '<div class="report-empty">メンバーが見つかりません</div>';
+      return;
+    }
+
+    populateNameSelect(userNameSelect);
+    populateCommentAuthorSelect();
+    populateMentionCheckboxes();
+  }catch(e){
+    console.warn('loadChatworkMembers failed', e);
+    userNameSelect.innerHTML = '<option value="" disabled>Chatworkが未設定、またはメンバー取得に失敗しました</option>';
+    document.getElementById('mentionCheckboxList').innerHTML = '<div class="report-empty">Chatworkが未設定、またはメンバー取得に失敗しました</div>';
+  }
+}
+
+function buildChatworkMessage(title, name, dateVal, summary, toRecipients){
+  const toMentions = (toRecipients || [])
+    .filter(r => r && r.accountId)
+    .map(r => `[To:${r.accountId}]${r.name || ''}さん`)
+    .join('\n');
+
+  return (
+    (toMentions ? `${toMentions}\n` : '') +
+    `[info][title]${title}[/title]` +
+    `投稿者：${name}\n` +
+    (dateVal ? `日付：${dateVal}\n` : '') +
+    (summary ? `${summary}\n` : '') +
+    `[/info]`
+  );
+}
+
+async function notifyChatwork(name, dateVal, toRecipients){
+  const message = buildChatworkMessage(
+    '日報が提出されました',
+    name,
+    dateVal,
+    `${formatDateJP(dateVal)} の日報が提出されました。`,
+    toRecipients
+  );
+
+  try{
+    await callChatworkFunction({ action: 'notify', message });
+  }catch(e){
+    // Netlify Functionsが未設定・未デプロイの環境ではここで失敗するが、
+    // 日報の提出自体には影響させない
+    console.warn('notifyChatwork skipped or failed', e);
+  }
+}
+
+async function notifyCommentChatwork(reportOwnerName, commentAuthor, commentText){
+  const ownerId = chatworkNameToId[(reportOwnerName || '').trim()];
+  const toRecipients = ownerId ? [{ accountId: ownerId, name: reportOwnerName }] : [];
+
+  const message = buildChatworkMessage(
+    '日報にコメントが届きました',
+    commentAuthor,
+    '',
+    `${reportOwnerName || ''} さんの日報に ${commentAuthor} さんからコメント：${commentText}`,
+    toRecipients
+  );
+
+  try{
+    await callChatworkFunction({ action: 'notify', message });
+  }catch(e){
+    console.warn('notifyCommentChatwork skipped or failed', e);
+  }
+}
+
+function loadEntryIntoForm(entry){
+  document.getElementById('reportDate').value = entry.date || todayStr();
+  populateNameSelect(document.getElementById('userName'), entry.name || '');
+
+  document.getElementById('notesReport').value = entry.notesReport || '';
+  document.getElementById('notesImprovement').value = entry.notesImprovement || '';
+  document.getElementById('notesTasks').value = entry.notesTasks || '';
+
+  const rows = Array.from(document.querySelectorAll('#taskList .task-row'));
+  const slots = entry.slots || [];
+
+  rows.forEach(row => {
+    const match = slots.find(s => s.start === row.dataset.start && s.end === row.dataset.end);
+    row.querySelector('.t-task').value = match ? (match.task || '') : '';
+    row.querySelector('.t-status').value = match ? (match.status || '未完了') : '未完了';
+    row.querySelector('.t-memo').value = match ? (match.memo || '') : '';
+  });
+
+  generateReport();
+  renderTeamList();
+  renderLiveSchedule(currentLiveEntries);
+
+  const statusEl = document.getElementById('submitStatus');
+  statusEl.textContent = `${entry.name || '未入力'} さんの日報を編集中です。内容を変更して「提出する」を押すと上書きされます。`;
+  statusEl.style.color = 'var(--ink-soft)';
+
+  document.getElementById('taskList').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function formatUpdatedAt(iso){
+  try{
+    const d = new Date(iso);
+    return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}提出`;
+  }catch(e){ return ''; }
+}
+
+let currentTeamEntries = [];
+
+function isOwnEntry(entry){
+  const myName = document.getElementById('userName').value.trim();
+  return myName !== '' && myName === (entry.name || '').trim();
+}
+
+function renderTeamList(){
+  const container = document.getElementById('teamList');
+
+  if(!firebaseReady){
+    container.innerHTML = '<div class="report-empty">チーム共有機能が未設定です（firebaseConfigの入力が必要です）。設定方法はコード内のコメントを参照してください。</div>';
+    return;
+  }
+
+  if(currentTeamEntries.length === 0){
+    container.innerHTML = '<div class="report-empty">この日付のチーム提出はまだありません。</div>';
+    return;
+  }
+
+  const entries = [...currentTeamEntries].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ja'));
+
+  container.innerHTML = '';
+  entries.forEach(entry => {
+    const row = document.createElement('div');
+    row.className = 'task-row team-row-actions';
+    row.innerHTML = `
+      <div class="col-main">
+        <strong style="font-size:13.5px;">${escapeHTML(entry.name || '未入力')}</strong>
+        <span style="font-size:11.5px;color:var(--ink-soft);">${formatUpdatedAt(entry.updatedAt)}</span>
+      </div>
+    `;
+    const viewBtn = document.createElement('button');
+    viewBtn.textContent = '表示';
+    viewBtn.style.cssText = 'align-self:center;padding:7px 14px;font-size:12px;font-weight:600;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--navy);cursor:pointer;';
+    viewBtn.addEventListener('click', () => {
+      document.getElementById('reportOutput').textContent = entry.text;
+      document.getElementById('reportOutput').dataset.plain = entry.text;
+      document.getElementById('statStrip').style.display = 'none';
+      document.getElementById('submitStatus').textContent = `${entry.name || '未入力'} さんの日報を表示中です。`;
+      document.getElementById('submitStatus').style.color = 'var(--ink-soft)';
+      if(entry._id){ showCommentSection(entry._id, entry.name); } else { hideCommentSection(); }
+    });
+
+    const editBtn = document.createElement('button');
+    const own = isOwnEntry(entry);
+    editBtn.textContent = '編集';
+    if(own){
+      editBtn.style.cssText = 'align-self:center;padding:7px 14px;font-size:12px;font-weight:600;border-radius:7px;border:1px solid var(--navy-soft);background:#EEF2F5;color:var(--navy);cursor:pointer;';
+      editBtn.addEventListener('click', () => loadEntryIntoForm(entry));
+    } else {
+      editBtn.disabled = true;
+      editBtn.title = '氏名欄に本人の名前を入力すると編集できます';
+      editBtn.style.cssText = 'align-self:center;padding:7px 14px;font-size:12px;font-weight:600;border-radius:7px;border:1px solid var(--line);background:#F3F1EC;color:var(--pending);cursor:not-allowed;';
+    }
+
+    row.appendChild(viewBtn);
+    row.appendChild(editBtn);
+    container.appendChild(row);
+  });
+}
+
+async function loadTeamReports(){
+  const container = document.getElementById('teamList');
+  hideCommentSection();
+
+  if(!firebaseReady){
+    container.innerHTML = '<div class="report-empty">チーム共有機能が未設定です（firebaseConfigの入力が必要です）。設定方法はコード内のコメントを参照してください。</div>';
+    return;
+  }
+
+  const dateVal = document.getElementById('teamReportDate').value || todayStr();
+  container.innerHTML = '<div class="report-empty">読み込み中…</div>';
+
+  try{
+    const snapshot = await db.collection('reports').where('date', '==', dateVal).get();
+    currentTeamEntries = [];
+    snapshot.forEach(doc => currentTeamEntries.push({ ...doc.data(), _id: doc.id }));
+    renderTeamList();
+  } catch(e){
+    console.error('loadTeamReports error', e);
+    container.innerHTML = '<div class="report-empty">読み込みに失敗しました。「更新」を押して再度お試しください。</div>';
+  }
+}
+
+document.getElementById('submitTeamBtn').addEventListener('click', submitToTeam);
+document.getElementById('refreshTeamBtn').addEventListener('click', loadTeamReports);
+document.getElementById('reportDate').addEventListener('change', () => {
+  generateReport();
+  subscribeLiveSchedule();
+});
+document.getElementById('teamReportDate').addEventListener('change', loadTeamReports);
+document.getElementById('userName').addEventListener('change', () => {
+  generateReport();
+  renderTeamList();
+  renderLiveSchedule(currentLiveEntries);
+  scheduleAutoSave();
+});
+document.getElementById('notesTasks').addEventListener('input', generateReport);
+document.getElementById('notesReport').addEventListener('input', onScheduleFieldChange);
+document.getElementById('notesImprovement').addEventListener('input', onScheduleFieldChange);
+document.getElementById('addCommentBtn').addEventListener('click', addComment);
+document.getElementById('commentInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){ e.preventDefault(); addComment(); }
+});
+
+loadTeamReports();
+subscribeLiveSchedule();
+generateReport();
+loadChatworkMembers();
+document.getElementById('refreshNameBtn').addEventListener('click', loadChatworkMembers);
+document.getElementById('refreshMentionCheckboxesBtn').addEventListener('click', loadChatworkMembers);
+</script>
+</body>
+</html>
