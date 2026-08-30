@@ -223,22 +223,17 @@
     .team-row-actions button{ width:100%; }
   }
   .carry-row{
-    grid-template-columns:auto 1fr 96px;
+    grid-template-columns:1fr 100px;
+    align-items:center;
   }
-  @media (max-width:520px){
+  @media (max-width:420px){
     .carry-row{
-      grid-template-columns:auto 1fr;
+      grid-template-columns:1fr;
     }
     .carry-row select{
-      grid-column:1 / -1;
       width:100%;
       margin-top:6px;
     }
-  }
-  .carry-row input[type="checkbox"]{
-    width:20px;
-    height:20px;
-    accent-color:var(--navy);
   }
   .time-label{
     font-family:"Zen Kaku Gothic New", sans-serif;
@@ -477,7 +472,19 @@
     </div>
 
     <!-- RIGHT: PREVIEW -->
-    <div class="panel">
+    <div>
+      <!-- MEMO PAD -->
+      <div class="panel" style="margin-bottom:22px;">
+        <div class="panel-head">
+          <h2>メモ帳</h2>
+          <span id="memoStatus" style="font-size:11px;color:var(--ink-soft);"></span>
+        </div>
+        <div class="panel-body">
+          <textarea id="memoText" style="min-height:160px;" placeholder="自由にメモを書けます。氏名を選択すると自動保存され、次回以降も引き継がれます。"></textarea>
+        </div>
+      </div>
+
+      <div class="panel">
       <div class="panel-head"><h2>日報プレビュー</h2></div>
       <div class="panel-body">
 
@@ -534,19 +541,9 @@
         <button class="btn-generate" id="submitTeamBtn" style="margin-top:10px;background:linear-gradient(180deg, #C4A34A, var(--gold));box-shadow:0 4px 14px -4px rgba(173,138,46,0.5);">👥 提出する</button>
         <div id="submitStatus" style="font-size:12px;color:var(--ink-soft);margin-top:8px;min-height:16px;"></div>
       </div>
+      </div>
     </div>
 
-  </div>
-
-  <!-- MEMO PAD -->
-  <div class="panel" style="margin-top:22px;">
-    <div class="panel-head">
-      <h2>メモ帳</h2>
-      <span id="memoStatus" style="font-size:11px;color:var(--ink-soft);"></span>
-    </div>
-    <div class="panel-body">
-      <textarea id="memoText" style="min-height:160px;" placeholder="自由にメモを書けます。氏名を選択すると自動保存され、次回以降も引き継がれます。"></textarea>
-    </div>
   </div>
 
   <div class="footnote">個人の入力内容はこの画面上でのみ保持されます。「提出する」を押した内容のみ、共有データベース経由で他のメンバーに公開されます（利用にはFirebase設定が必要です）。</div>
@@ -1000,19 +997,10 @@ function renderCarriedOverItems(){
 
   container.innerHTML = '';
   carriedOverItems.forEach(item => {
+    item.included = true;
+
     const row = document.createElement('div');
     row.className = 'task-row carry-row';
-
-    const checkWrap = document.createElement('label');
-    checkWrap.style.cssText = 'display:flex;align-items:center;';
-    const check = document.createElement('input');
-    check.type = 'checkbox';
-    check.checked = item.included;
-    check.addEventListener('change', () => {
-      item.included = check.checked;
-      generateReport();
-    });
-    checkWrap.appendChild(check);
 
     const textWrap = document.createElement('div');
     textWrap.className = 'col-main';
@@ -1034,7 +1022,6 @@ function renderCarriedOverItems(){
       generateReport();
     });
 
-    row.appendChild(checkWrap);
     row.appendChild(textWrap);
     row.appendChild(select);
     container.appendChild(row);
