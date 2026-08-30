@@ -1222,7 +1222,7 @@ function populateCommentAuthorSelect(){
 
 async function loadChatworkMembers(){
   const userNameSelect = document.getElementById('userName');
-  userNameSelect.innerHTML = '<option disabled>読み込み中…</option>';
+  userNameSelect.innerHTML = '<option value="" disabled>読み込み中…</option>';
 
   try{
     const data = await callChatworkFunction({ action: 'members' });
@@ -1231,7 +1231,7 @@ async function loadChatworkMembers(){
     chatworkMembers.forEach(m => { chatworkNameToId[m.name] = m.accountId; });
 
     if(chatworkMembers.length === 0){
-      userNameSelect.innerHTML = '<option disabled>メンバーが見つかりません</option>';
+      userNameSelect.innerHTML = '<option value="" disabled>メンバーが見つかりません</option>';
       document.getElementById('mentionCheckboxList').innerHTML = '<div class="report-empty">メンバーが見つかりません</div>';
       return;
     }
@@ -1241,7 +1241,7 @@ async function loadChatworkMembers(){
     populateMentionCheckboxes();
   }catch(e){
     console.warn('loadChatworkMembers failed', e);
-    userNameSelect.innerHTML = '<option disabled>Chatworkが未設定、またはメンバー取得に失敗しました</option>';
+    userNameSelect.innerHTML = '<option value="" disabled>Chatworkが未設定、またはメンバー取得に失敗しました</option>';
     document.getElementById('mentionCheckboxList').innerHTML = '<div class="report-empty">Chatworkが未設定、またはメンバー取得に失敗しました</div>';
   }
 }
