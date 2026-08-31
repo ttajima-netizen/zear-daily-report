@@ -209,6 +209,14 @@
     align-items:start;
     transition:border-color .15s ease;
   }
+  .task-row .t-task:disabled,
+  .task-row .t-memo:disabled,
+  .task-row .t-status:disabled{
+    background:#EFEDE6;
+    color:var(--ink-soft);
+    cursor:not-allowed;
+    opacity:0.7;
+  }
   .task-row:focus-within{ border-color:var(--navy-soft); }
   @media (max-width:560px){
     .task-row{grid-template-columns:1fr;}
@@ -447,6 +455,7 @@
           </div>
         </div>
 
+        <div id="taskListLockedNotice" style="display:none;font-size:12.5px;color:var(--seal);background:var(--pending-bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:10px;">氏名を選択すると、タイムスケジュールを入力できます。</div>
         <div id="taskList" class="task-list"></div>
 
         <div class="field notes" id="notesTasksField" style="display:none;">
@@ -602,6 +611,18 @@ function buildRows(){
     div.querySelector('.t-task').addEventListener('input', onScheduleFieldChange);
     div.querySelector('.t-memo').addEventListener('input', onScheduleFieldChange);
     div.querySelector('.t-status').addEventListener('change', onScheduleFieldChange);
+  });
+
+  updateScheduleLockState();
+}
+
+function updateScheduleLockState(){
+  const hasName = document.getElementById('userName').value.trim() !== '';
+  const notice = document.getElementById('taskListLockedNotice');
+  notice.style.display = hasName ? 'none' : 'block';
+
+  document.querySelectorAll('#taskList .t-task, #taskList .t-memo, #taskList .t-status').forEach(el => {
+    el.disabled = !hasName;
   });
 }
 
@@ -804,12 +825,130 @@ function generateReport(){
 
   document.getElementById('reportOutput').innerHTML = previewParts.join('');
   document.getElementById('reportOutput').dataset.plain = lines.join('\n');
+
+  saveDraftToLocalStorage();
+}
+
+/* ---------------- ブラウザを閉じても消えないローカル下書き保存 ----------------
+   Firestoreへの提出とは別に、入力中の内容をブラウザのlocalStorageに
+   自動保存します。同じ端末・同じブラウザで再度開いた際、
+   「今日の日付」の下書きであれば自動的に復元します。
+--------------------------------------------------------------------- */
+
+const DRAFT_STORAGE_KEY = 'zearDailyReportDraft';
+let draftUserNameToApply = '';
+
+function saveDraftToLocalStorage(){
+  try{
+    const draft = {
+      reportDate: document.getElementById('reportDate').value,
+      userName: document.getElementById('userName').value,
+      notesTasks: document.getElementById('notesTasks').value,
+      notesIncomplete: document.getElementById('notesIncomplete').value,
+      notesReport: document.getElementById('notesReport').value,
+      notesImprovement: document.getElementById('notesImprovement').value,
+      slots: collectAllSlots(),
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  }catch(e){
+    console.warn('下書きの保存に失敗しました', e);
+  }
+}
+
+function loadDraftFromLocalStorage(){
+  try{
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if(!raw) return;
+    const draft = JSON.parse(raw);
+
+    // 日付が今日のものでなければ古い下書きとみなして復元しない
+    if(!draft.reportDate || draft.reportDate !== todayStr()) return;
+
+    document.getElementById('notesTasks').value = draft.notesTasks || '';
+    document.getElementById('notesIncomplete').value = draft.notesIncomplete || '';
+    document.getElementById('notesReport').value = draft.notesReport || '';
+    document.getElementById('notesImprovement').value = draft.notesImprovement || '';
+
+    if(Array.isArray(draft.slots)){
+      const rows = Array.from(document.querySelectorAll('#taskList .task-row'));
+      draft.slots.forEach((s, i) => {
+        if(!rows[i]) return;
+        if(s.start === rows[i].dataset.start && s.end === rows[i].dataset.end){
+          rows[i].querySelector('.t-task').value = s.task || '';
+          rows[i].querySelector('.t-status').value = s.status || '未完了';
+          rows[i].querySelector('.t-memo').value = s.memo || '';
+        }
+      });
+    }
+
+    // 氏名の選択肢はChatworkメンバー取得後に反映されるため、一旦保持しておく
+    draftUserNameToApply = draft.userName || '';
+  }catch(e){
+    console.warn('下書きの読み込みに失敗しました', e);
+  }
+}
+
+function applyDraftFieldsToForm(data){
+  document.getElementById('notesTasks').value = data.notesTasks || '';
+  document.getElementById('notesIncomplete').value = data.notesIncomplete || '';
+  document.getElementById('notesReport').value = data.notesReport || '';
+  document.getElementById('notesImprovement').value = data.notesImprovement || '';
+
+  if(Array.isArray(data.slots)){
+    const rows = Array.from(document.querySelectorAll('#taskList .task-row'));
+    data.slots.forEach((s, i) => {
+      if(!rows[i]) return;
+      if(s.start === rows[i].dataset.start && s.end === rows[i].dataset.end){
+        rows[i].querySelector('.t-task').value = s.task || '';
+        rows[i].querySelector('.t-status').value = s.status || '未完了';
+        rows[i].querySelector('.t-memo').value = s.memo || '';
+      }
+    });
+  }
+}
+
+// ブラウザ(端末)を問わず続きから入力できるよう、クラウド上の下書き(schedules)と
+// このブラウザのローカル下書きを比べて、より新しい方を画面に反映する
+async function syncDraftAcrossDevices(){
+  if(!firebaseReady) return;
+
+  const name = document.getElementById('userName').value.trim();
+  const dateVal = document.getElementById('reportDate').value || todayStr();
+  if(!name) return;
+
+  try{
+    const doc = await db.collection('schedules').doc(teamDocId(dateVal, name)).get();
+    if(!doc.exists) return;
+
+    const cloud = doc.data();
+    const cloudTime = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
+
+    let localTime = 0;
+    try{
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if(raw){
+        const local = JSON.parse(raw);
+        if(local.reportDate === dateVal && local.userName === name && local.updatedAt){
+          localTime = new Date(local.updatedAt).getTime();
+        }
+      }
+    }catch(e){ /* ignore */ }
+
+    if(cloudTime > localTime){
+      applyDraftFieldsToForm(cloud);
+      generateReport();
+    }
+  }catch(e){
+    console.warn('syncDraftAcrossDevices error', e);
+  }
 }
 
 // Init
 document.getElementById('reportDate').value = todayStr();
 document.getElementById('teamReportDate').value = todayStr();
 buildRows();
+loadDraftFromLocalStorage();
 
 
 document.getElementById('copyBtn').addEventListener('click', () => {
@@ -1119,7 +1258,11 @@ async function saveScheduleLive(){
       name,
       date: dateVal,
       updatedAt: new Date().toISOString(),
-      slots: collectAllSlots()
+      slots: collectAllSlots(),
+      notesTasks: document.getElementById('notesTasks').value,
+      notesIncomplete: document.getElementById('notesIncomplete').value,
+      notesReport: document.getElementById('notesReport').value,
+      notesImprovement: document.getElementById('notesImprovement').value
     });
   }catch(e){
     console.error('saveScheduleLive error', e);
@@ -1522,6 +1665,18 @@ async function loadChatworkMembers(){
     populateNameSelect(userNameSelect);
     populateCommentAuthorSelect();
     populateMentionCheckboxes();
+
+    if(draftUserNameToApply){
+      populateNameSelect(userNameSelect, draftUserNameToApply);
+      draftUserNameToApply = '';
+      updateScheduleLockState();
+      generateReport();
+      renderTeamList();
+      renderLiveSchedule(currentLiveEntries);
+      loadPreviousIncompleteTasks();
+      loadMemo();
+      syncDraftAcrossDevices();
+    }
   }catch(e){
     console.warn('loadChatworkMembers failed', e);
     userNameSelect.innerHTML = '<option value="" disabled>Chatworkが未設定、またはメンバー取得に失敗しました</option>';
@@ -1564,8 +1719,7 @@ async function notifyChatwork(name, dateVal, toRecipients){
 }
 
 async function notifyCommentChatwork(reportOwnerName, commentAuthor, commentText){
-  const ownerId = chatworkNameToId[(reportOwnerName || '').trim()];
-  const toRecipients = ownerId ? [{ accountId: ownerId, name: reportOwnerName }] : [];
+  const toRecipients = getAllMemberMentions();
 
   const message = buildChatworkMessage(
     '日報にコメントが届きました',
@@ -1585,6 +1739,7 @@ async function notifyCommentChatwork(reportOwnerName, commentAuthor, commentText
 function loadEntryIntoForm(entry){
   document.getElementById('reportDate').value = entry.date || todayStr();
   populateNameSelect(document.getElementById('userName'), entry.name || '');
+  updateScheduleLockState();
 
   document.getElementById('notesReport').value = entry.notesReport || '';
   document.getElementById('notesImprovement').value = entry.notesImprovement || '';
@@ -1710,15 +1865,18 @@ document.getElementById('reportDate').addEventListener('change', () => {
   generateReport();
   subscribeLiveSchedule();
   loadPreviousIncompleteTasks();
+  syncDraftAcrossDevices();
 });
 document.getElementById('teamReportDate').addEventListener('change', loadTeamReports);
 document.getElementById('userName').addEventListener('change', () => {
+  updateScheduleLockState();
   generateReport();
   renderTeamList();
   renderLiveSchedule(currentLiveEntries);
   scheduleAutoSave();
   loadPreviousIncompleteTasks();
   loadMemo();
+  syncDraftAcrossDevices();
 });
 document.getElementById('refreshPrevIncompleteBtn').addEventListener('click', loadPreviousIncompleteTasks);
 document.getElementById('notesTasks').addEventListener('input', generateReport);
